@@ -1,0 +1,50 @@
+## Two repositories, two roles
+
+**PlusTube**, also known as Gothwad Tube, is a privacy-respecting YouTube and YouTube Music client for Android. `tubeweb` is the website; `tubeapp` is the application repository. Do not treat the website build as an Android APK build.
+
+The website includes product information, downloads, changelogs, a Neuro explainer, and privacy, terms, and DMCA pages. Its stack is Vite, React, TypeScript, and Tailwind CSS.
+
+## Run the website locally
+
+```bash
+git clone https://github.com/GothwadTech/tubeweb.git
+cd tubeweb
+npm install
+npm run dev
+```
+
+## Build and deploy
+
+```bash
+npm run build
+npm run preview
+```
+
+The upstream build type-checks the project and writes `dist/`. For Cloudflare Pages, set the build command to `npm run build` and the output directory to `dist`. Use a Node version supported by the repository's current dependencies.
+
+The source includes `public/_redirects` for SPA routes and `public/_headers` for caching. Test a direct visit to `/download`, `/privacy`, and `/terms` after deployment.
+
+## Release data pipeline
+
+The GitHub Action `.github/workflows/update-stats.yml` refreshes website data hourly according to the source README.
+
+| File | Contents |
+| --- | --- |
+| `public/downloads.json` | Latest and nightly APK release links |
+| `public/changelogs.json` | Release notes from the app repository |
+| `public/contributors.json` | Project and upstream contributors |
+| `public/stats.json` | Repository and download statistics |
+
+To refresh download data manually with the authenticated GitHub CLI:
+
+```bash
+bash .github/scripts/fetch-downloads.sh public/downloads.json
+```
+
+Inspect the generated JSON before committing. If downloads are missing, check the app releases and the workflow logs instead of adding a fabricated APK URL.
+
+## Credits and licensing
+
+PlusTube is based on [Flow](https://github.com/A-EDev/Flow) by A-EDev and contributors. The website README specifies GPL-3.0. Preserve upstream attribution and review the license before redistributing changes.
+
+Visit the [app repository](https://github.com/GothwadTech/tubeapp) for Android-specific build and release instructions.

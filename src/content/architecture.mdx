@@ -1,0 +1,49 @@
+## An ecosystem, not a monolith
+
+Gothwad Tech maintains multiple independently deployable products. Some share an identity service; others have their own authentication and infrastructure. Do not assume every product already uses Gothwad Accounts.
+
+## Identity and email
+
+```text
+Browser → Accounts frontend (Cloudflare Pages)
+        → Accounts Worker → Supabase Auth + PostgreSQL
+
+Browser → Mail frontend (Cloudflare Pages)
+        → Mail Worker → separate Mail Supabase project
+                      → Accounts Worker (session / username checks)
+                      → Resend (outbound mail)
+Email Routing → Mail Worker's email handler → Mail database
+```
+
+Accounts owns authentication, profile data, sessions, and OAuth authorization. Mail derives an address from the verified username and `APP_DOMAIN`; it does not directly query the Accounts database.
+
+<Callout title="Two different Accounts URLs">Mail's server-to-server `AUTH_HUB_URL` must reach the Accounts Worker Custom Domain. `AUTH_SIGNIN_URL` is the browser-facing sign-in site. Mixing them can return the Pages HTML page instead of the expected JSON API response.</Callout>
+
+## Independent web applications
+
+- **GrixChat:** Supabase-backed real-time data, Pages Functions API adapters, WebRTC calls, and Firebase background notifications.
+- **Meet:** static React application using PeerJS and WebRTC for peer-to-peer meetings. Signaling and browser connectivity are still required; “no app backend” does not mean no network dependencies.
+- **PlusTube web:** static marketing, download, legal, and changelog pages. GitHub Actions refresh release-related JSON files.
+- **Clash Drive:** browser-side Telegram MTProto connections, with an optional Worker for public sharing. This is not the Accounts OAuth Drive API.
+- **Education:** role-based web UI with local persistence and optional Supabase integration.
+
+## Native Android products
+
+Launcher and Manager are Android applications built with Gradle. They are not deployed to Pages. Browser has separate product-specific installation and usage terms. Review each repository's license before reusing source code.
+
+## Configuration boundaries
+
+| Boundary | What belongs there |
+| --- | --- |
+| Browser | Public URLs and explicitly public configuration |
+| Worker / server | Service-role keys, signing secrets, outbound email credentials |
+| Database | Product data, schema, row-level security policies |
+| CI secrets | Build and release credentials; never source files |
+
+Read [Security & configuration](/docs/security) before deploying an authenticated product.
+
+## Documentation coverage
+
+The central portal currently provides setup and integration detail for Accounts, Mail, PlusTube web, Meet, and the docs site; other products have source-based orientation guides. The [repository directory](/repositories) lists additional projects without inventing undocumented APIs or production guarantees.
+
+Source references: [Accounts architecture](https://github.com/GothwadTech/accounts/blob/main/docs/ARCHITECTURE.md), [Mail behavior](https://github.com/GothwadTech/mail/blob/main/docs/MAIL.md), and the product READMEs linked from their guides.

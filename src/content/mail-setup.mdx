@@ -1,0 +1,80 @@
+## Prerequisites
+
+Deploy and verify Gothwad Accounts first. You also need a separate Supabase project for Mail, a Cloudflare-managed email domain, and a Resend credential with send permissions. Review upstream `docs/SETUP.md` before changing DNS or a production database.
+
+## 1. Create the Mail database
+
+Create a **new** Supabase project; do not reuse Accounts. Review and run `supabase/mail.sql` in the new project's SQL Editor. Verify `public.mail_messages` exists and row-level security is enabled.
+
+Keep the Mail project's URL and service-role key for the Mail Worker. The browser must not receive this key.
+
+## 2. Configure the two Accounts URLs
+
+Edit public values in `worker/wrangler.toml`. This file is reapplied on deployment and is the source of truth for public settings.
+
+| Variable | Purpose |
+| --- | --- |
+| `APP_DOMAIN` | Email address domain, such as `gothwadtech.com` |
+| `AUTH_HUB_URL` | Accounts Worker Custom Domain, such as `https://api.gothwadtech.com` |
+| `AUTH_SIGNIN_URL` | Browser sign-in site, such as `https://accounts.gothwadtech.com` |
+| `MAIL_URL` | Mail frontend origin |
+| `SUPABASE_URL` | Separate Mail project's URL |
+| `DAILY_SEND_LIMIT` | Per-user daily send cap |
+| `MAX_INBOUND_BYTES` | Inbound message size limit |
+
+Do not route server-to-server auth calls through the Accounts Pages hostname. A successful HTML response is not a valid authenticated session.
+
+## 3. Set Worker secrets
+
+Keep the Worker name `mail` consistent in the dashboard and Wrangler configuration. From the repository root:
+
+```bash
+npm install
+npx wrangler login
+npm run worker:secrets
+npm run worker:secrets:list
+```
+
+The script prompts for `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, and `ACCOUNTS_INTERNAL_TOKEN`. Set Accounts' `MAIL_INTERNAL_TOKEN` to the **same value** as Mail's `ACCOUNTS_INTERNAL_TOKEN` through a secure secret-setting workflow.
+
+<Callout title="Public variables are not secret storage">Use Worker Secrets for keys and shared tokens. Never commit them in `wrangler.toml`, place them in `VITE_*` variables, or paste them in a support ticket.</Callout>
+
+## 4. Deploy the Worker and frontend
+
+```bash
+npm run worker:deploy
+npm run build
+```
+
+Publish the web app to Cloudflare Pages with build command `npm run build` and output `dist`. Add the Mail custom domain, and route `mail.YOUR_DOMAIN/api/*` to the Mail Worker. Verify the routing against the repository setup instructions for your domain.
+
+Visit `/api/health`. The `configured` response should show the required settings as booleans, without exposing their values.
+
+## 5. Verify Accounts SSO
+
+1. Sign in to Accounts in the same browser profile.
+2. Open Mail and inspect the status of `/api/session`.
+3. A 200 response should load the mailbox.
+4. A 401 means Mail could not verify a shared session. Check cookie Domain, Path, and Secure attributes without sharing cookie values.
+5. A 503 `accounts_unexpected_response` can indicate that the Accounts URL returned HTML or a redirect instead of JSON.
+6. A 503 `accounts_user_invalid` means the session profile lacks a usable username.
+
+The current Mail flow uses shared-cookie SSO. Optional OAuth callback registration described upstream is not required for this current flow.
+
+## 6. Enable inbound and outbound mail
+
+Verify your sending domain in Resend using the records supplied for your own deployment. Before enabling Cloudflare Email Routing, confirm the deployed Accounts endpoint `/api/internal/usernames/:username` accepts the internal token and returns the documented existence response.
+
+Then configure Email Routing to deliver inbound mail to the `mail` Worker. Use a test account to send and receive a message. Confirm Inbox and Sent copies appear. Unknown recipients must be rejected; failed upstream validation must not silently accept mail.
+
+## Troubleshooting
+
+| Symptom | Action |
+| --- | --- |
+| Sign-in chooser repeats | Inspect `/api/session` error; check the shared cookie configuration |
+| API returns `200 text/html` | Fix `AUTH_HUB_URL` to the Accounts Worker Custom Domain |
+| Sending returns 503 | Check the Resend secret and health configuration |
+| Sending returns 429 | Check the user's daily cap or provider rate limit |
+| Inbound validation fails | Verify the shared internal token and Accounts endpoint before routing mail |
+
+For detailed message behavior and limits, see [Gothwad Mail](/docs/mail).

@@ -1,0 +1,112 @@
+<Callout title="Use PKCE for public clients">A browser or mobile application must not contain a client secret. Use the authorization-code flow with S256 PKCE and validate the returned state before exchanging the code.</Callout>
+
+## 1. Register your application
+
+Have an Accounts administrator register your app in `public.ecosystem_apps`. The `client_id` must exist and your callback must exactly match a registered `redirect_uris` entry. Scheme, hostname, port, path, and trailing slash matter.
+
+Request only the scopes you need. `profile` provides basic profile data, `email` provides the derived Gothwad email address, and `offline_access` requests a refresh token. A registered scope does not by itself guarantee a downstream product API is deployed.
+
+## 2. Set the correct base URL
+
+Choose the base for your actual deployment:
+
+| Routing model | Base URL example |
+| --- | --- |
+| Accounts frontend with `/api/*` Worker route | `https://accounts.gothwadtech.com/api` |
+| Accounts Worker Custom Domain | `https://api.gothwadtech.com` |
+
+Keep the `/api` prefix when building URLs. A leading slash passed to `new URL()` would discard that path prefix, so the example below appends to the base explicitly.
+
+## 3. Generate PKCE and redirect
+
+Replace the example client and callback with your registered values. This code runs in a secure browser context.
+
+```typescript
+const AUTH = 'https://accounts.gothwadtech.com/api';
+const CLIENT_ID = 'YOUR_REGISTERED_CLIENT_ID';
+const REDIRECT_URI = `${location.origin}/auth/gothwad/callback`;
+const base64url = (bytes: Uint8Array) =>
+  btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+const verifier = base64url(crypto.getRandomValues(new Uint8Array(32)));
+const state = base64url(crypto.getRandomValues(new Uint8Array(16)));
+const digest = await crypto.subtle.digest(
+  'SHA-256', new TextEncoder().encode(verifier)
+);
+const challenge = base64url(new Uint8Array(digest));
+
+sessionStorage.setItem('gothwad_pkce', verifier);
+sessionStorage.setItem('gothwad_state', state);
+
+const url = new URL(`${AUTH}/oauth/authorize`);
+url.search = new URLSearchParams({
+  client_id: CLIENT_ID,
+  redirect_uri: REDIRECT_URI,
+  response_type: 'code',
+  scope: 'profile email',
+  state,
+  code_challenge: challenge,
+  code_challenge_method: 'S256',
+}).toString();
+location.assign(url);
+```
+
+## 4. Validate the callback
+
+On the registered callback page, define `AUTH`, `CLIENT_ID`, and `REDIRECT_URI` with the **same values as above**. Validate the callback before any network request. This example keeps the token only in memory.
+
+```typescript
+const params = new URLSearchParams(location.search);
+const expectedState = sessionStorage.getItem('gothwad_state');
+const verifier = sessionStorage.getItem('gothwad_pkce');
+sessionStorage.removeItem('gothwad_state');
+sessionStorage.removeItem('gothwad_pkce');
+history.replaceState(null, '', location.pathname);
+
+if (!expectedState || params.get('state') !== expectedState) {
+  throw new Error('Invalid OAuth state. Restart sign-in.');
+}
+if (params.has('error')) throw new Error('Sign-in was not approved.');
+const code = params.get('code');
+if (!code || !verifier) throw new Error('Missing code or PKCE verifier.');
+
+const response = await fetch(`${AUTH}/oauth/token`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    grant_type: 'authorization_code',
+    client_id: CLIENT_ID,
+    redirect_uri: REDIRECT_URI,
+    code,
+    code_verifier: verifier,
+  }),
+});
+if (!response.ok) throw new Error('Token exchange failed. Restart sign-in.');
+const tokens = await response.json();
+
+const profileResponse = await fetch(`${AUTH}/oauth/userinfo`, {
+  headers: { Authorization: `Bearer ${tokens.access_token}` },
+});
+if (!profileResponse.ok) throw new Error('Could not load your profile.');
+const profile = await profileResponse.json();
+// Use profile in your app. Do not log tokens or session credentials.
+```
+
+## 5. Handle expiry safely
+
+The source guide documents one-hour access tokens, five-minute authorization codes, and rotating refresh tokens when `offline_access` is granted. Treat server responses as authoritative; do not hardcode a session lifetime into authorization decisions.
+
+A server-side application should exchange codes on its server and use secure, HttpOnly session cookies for the browser. Do not distribute the Accounts signing secret to other applications; obtain user information from the provider endpoint.
+
+## Troubleshooting
+
+| Error | Resolution |
+| --- | --- |
+| Unknown client ID | Register the app in `ecosystem_apps` |
+| Redirect URI not registered | Match the entire callback URL exactly |
+| PKCE verification failed | Use the same verifier that created the challenge |
+| State mismatch | Reject the callback and restart sign-in |
+| API request returns HTML | Correct the Worker base URL and preserve `/api` |
+
+See [API reference](/docs/api) for the endpoint summary. These are integration examples, not a published Gothwad SDK.

@@ -1,0 +1,32 @@
+## Overview
+
+The `gothwadtech` repository contains the Gothwad Tech corporate web platform. The source tree uses React and TypeScript with Vite and includes reusable sections for services, products, company information, and developer entry points.
+
+This is separate from `GothwadTech/docs`, the documentation portal you are reading.
+
+## Find the relevant code
+
+| Location | Purpose |
+| --- | --- |
+| `src/App.tsx` | Application composition |
+| `src/components/` | Page sections and shared interface components |
+| `src/components/DeveloperDocsSection.tsx` | Developer documentation entry point |
+| `src/data/gothwadApps.ts` | App directory data |
+| `src/context/` | Language and theme state |
+| `public/_redirects` | Static deployment routing |
+
+## Development workflow
+
+1. Review the repository's README and contribution instructions.
+2. Check `package.json` for the current install, development, and build scripts.
+3. Install dependencies using the committed lockfile.
+4. Run the configured development command and test the section you are editing.
+5. Validate production output and direct routes before publishing.
+
+This orientation does not turn marketing claims in the corporate README into measured uptime, security, or performance guarantees.
+
+## Connect the docs portal
+
+Update the website's developer entry point to your actual docs deployment URL after Pages is configured. Do not publish a guessed production URL before the domain is working.
+
+Keep navigation labels and product names consistent across the corporate site and this portal. Product implementation details should link to their specific guides instead of being duplicated in marketing components.

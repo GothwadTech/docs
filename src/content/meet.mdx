@@ -1,0 +1,50 @@
+## Overview
+
+Gothwad Meet is a React and TypeScript meeting application using PeerJS and WebRTC. Its source describes a preview lobby, camera and microphone controls, screen sharing, in-meeting chat, a whiteboard, and multiple meeting layouts.
+
+Basic meetings do not require an application database. Peer discovery, signaling, network traversal, and browser permissions are still required.
+
+## Run locally
+
+Use the `meet` repository. Its README also mentions an older repository name; these instructions consistently use the current product repository.
+
+```bash
+git clone https://github.com/GothwadTech/meet.git
+cd meet
+npm install
+npm run dev
+```
+
+Use the local URL printed by Vite. The documented dev server uses port 3000. The source uses Vite 8; choose a Node release supported by its current package requirements.
+
+## Test a meeting
+
+1. Open the app and create a meeting.
+2. Allow camera and microphone access in the preview lobby.
+3. Copy the meeting link to a second browser or device.
+4. Join and check audio, video, participant state, and chat.
+5. Test screen sharing using the browser's chooser.
+6. Leave the call and verify camera and microphone activity stops.
+
+Use HTTPS on deployed origins. Browser localhost is suitable for local permission testing, but an insecure LAN URL can block media APIs.
+
+## Build and publish
+
+```bash
+npm run lint
+npm run build
+npm run preview
+```
+
+For Pages, use Vite as the framework, `npm run build` as the build command, and `dist` as the output directory. The repository includes a SPA redirect file. Test a direct meeting link after deployment.
+
+## Troubleshooting
+
+| Symptom | Check |
+| --- | --- |
+| No camera or microphone | Browser permission, OS permission, and secure origin |
+| Participants cannot connect | Network restrictions and PeerJS / WebRTC configuration |
+| Screen sharing unavailable | Browser capability and permission; test desktop first |
+| Captions do not appear | Browser speech-recognition support and permissions |
+
+A peer-to-peer mesh is not a guarantee of large-meeting scalability. Validate your intended device and participant count before promising a production service level.

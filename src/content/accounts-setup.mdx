@@ -1,0 +1,71 @@
+## Before you begin
+
+You need the Accounts repository, a Cloudflare account with your domain, and a Supabase project dedicated to Accounts. Use a development deployment to verify the flow before production. Keep all credentials out of Git and issue reports.
+
+## 1. Create the database
+
+Create a Supabase project. In its SQL Editor, review and run the repository's SQL files in order:
+
+1. `sql/01_core_schema.sql` — core tables, policies, triggers, and seeds.
+2. `sql/02_account_activity.sql` — account activity.
+3. `sql/03_avatars_storage.sql` — profile image storage.
+
+Read `sql/README.md` before running migrations. Save the project URL, anon key, and service-role key in your own secure configuration workflow.
+
+The upstream setup uses an Accounts-managed confirmation model and instructs disabling Supabase email confirmation. Review that model before changing a live project's authentication settings; this is not a general recommendation for other Supabase applications.
+
+## 2. Configure the Worker
+
+Work inside `cloudflare-worker/`. Keep the Worker name `accounts` aligned with the Cloudflare dashboard. Review `wrangler.toml` and the example environment file for all current settings, including your app domain and Supabase URL.
+
+```bash
+cd cloudflare-worker
+npm install
+npx wrangler login
+npx wrangler secret put SUPABASE_ANON_KEY
+npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+npx wrangler secret put JWT_SECRET
+npx wrangler deploy
+```
+
+Wrangler prompts for secret values. Never paste them into a command committed to a file. Set a strong, independently generated signing secret. Follow the source setup guide for optional password-reset email configuration.
+
+## 3. Connect the API route
+
+For same-origin browser requests, configure the Accounts Worker route at `accounts.YOUR_DOMAIN/api/*`. The DNS record must be proxied through Cloudflare.
+
+Verify `/api/health` reaches the Worker and returns JSON. If Mail will call Accounts, also configure a Worker **Custom Domain**, such as `api.YOUR_DOMAIN`, for server-to-server requests.
+
+<Callout title="A route is not the same as a Custom Domain">Mail's setup specifically requires the Accounts Worker Custom Domain for `AUTH_HUB_URL`. A same-zone request through the Pages hostname can return HTML rather than invoking the Worker.</Callout>
+
+## 4. Publish the frontend
+
+Create a Cloudflare Pages project connected to `GothwadTech/accounts`.
+
+| Setting | Value |
+| --- | --- |
+| Framework preset | None |
+| Build command | Leave empty |
+| Build output directory | `web` |
+
+Add your Accounts custom domain to Pages. With the same-origin `/api/*` Worker route, keep `API_URL: ''` in `web/js/config.js`.
+
+## 5. Verify the deployment
+
+1. Request `/api/health`; confirm JSON, not an HTML page.
+2. Open `/signup` and create a test account.
+3. Sign in through `/signin` and verify `/me` loads the right profile.
+4. Test sign-out and sign-in again in the same browser.
+5. Review session cookie attributes without copying their values.
+6. If integrating Mail, verify its required username-check contract before enabling inbound mail.
+
+## Troubleshooting
+
+| Symptom | Check |
+| --- | --- |
+| Missing build script | Set Pages framework to None and clear the build command |
+| API returns HTML | Check the Worker route, Custom Domain, and URL prefix |
+| Worker cannot connect to Supabase | Check the project URL and Worker secret names |
+| Mail does not recognize a session | Check parent-domain cookie configuration and `AUTH_HUB_URL` |
+
+Continue with [OAuth integration](/docs/oauth) or [Mail deployment](/docs/mail-setup).

@@ -1,0 +1,35 @@
+## Current source coverage
+
+The Gothwad AI repository describes an AI Studio application. Its README currently provides a short local-development setup, not a complete public API contract.
+
+<Callout title="Overview coverage">This page documents only the setup available in the source README. Hosted API routes, rate limits, and integration guarantees are not yet verified.</Callout>
+
+## Local development
+
+Use a supported Node.js installation and your own development credentials.
+
+```bash
+git clone https://github.com/GothwadTech/ai.git
+cd ai
+npm install
+```
+
+The upstream README instructs setting `GEMINI_API_KEY` in `.env.local`, then running:
+
+```bash
+npm run dev
+```
+
+Do not commit `.env.local`. Before deployment, inspect how the current implementation uses the key. A local environment file does not guarantee a value remains server-side when bundled by a frontend build tool.
+
+## Before a public deployment
+
+1. Review the Vite and server configuration for environment-variable exposure.
+2. Ensure provider credentials stay on a protected server or Worker.
+3. Apply appropriate authentication, request limits, and usage controls.
+4. Test with a separate development key.
+5. Document the verified deployment architecture before publishing integration examples.
+
+## Contribute verified detail
+
+When the repository's implementation and deployment contract are confirmed, add architecture, configuration, testing, and troubleshooting guides here. Link each claim to the relevant source file rather than inferring behavior from the product name.
