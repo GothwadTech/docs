@@ -1,0 +1,37 @@
+## Overview
+
+Gothwad Manager is an Android file-management application. Its source describes file browsing and archive-related tools across Android devices, with package identity `com.gothwad.manager`.
+
+## Build prerequisites
+
+The source README specifies **JDK 17**, **Android SDK 36**, Build Tools 36.0.0, and minimum SDK 24. Verify these against the checked-out Gradle configuration.
+
+```bash
+git clone https://github.com/GothwadTech/manager.git
+cd manager
+./gradlew assembleDebug
+```
+
+On Windows, run `gradlew.bat assembleDebug`. Import the repository into Android Studio to inspect device targets and build errors.
+
+## Verify file access safely
+
+1. Install the debug build on a test device.
+2. Grant only the permissions required for the workflow being tested.
+3. Start with disposable sample files in a test folder.
+4. Verify listing, opening, copying, moving, and deletion behavior.
+5. Check archive operations using copies rather than your only copy of important data.
+6. Test storage permission denial and revocation as well as the happy path.
+
+## Build release artifacts
+
+```bash
+./gradlew assembleRelease
+./gradlew bundleRelease
+```
+
+The repository documents build and release GitHub Actions. Release signing and publishing need the maintainer's secure configuration; no signing material belongs in source control or this documentation.
+
+## Scope of this guide
+
+This is a source-based development orientation. Review the current repository for detailed file-operation contracts and platform behavior. No public HTTP API is documented here.

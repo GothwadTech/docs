@@ -1,0 +1,47 @@
+## Documentation structure
+
+This site uses React, Vite, TypeScript, CSS, and MDX. Content lives in `src/content/`. Metadata in `src/data.ts` powers navigation, product cards, guide indexes, and search.
+
+```text
+src/
+  content/         MDX product and integration guides
+  data.ts          Product and document metadata
+  repositories.json  GitHub repository inventory snapshot
+  App.tsx          Layout, routes, search, and content rendering
+  styles.css       Responsive light and dark themes
+public/
+  _redirects       Cloudflare Pages SPA fallback
+  _headers         Static response headers
+```
+
+## Add or update a guide
+
+1. Read the relevant product's source files and confirm the current implementation.
+2. Add a kebab-case MDX file in `src/content/`.
+3. Add matching metadata to `docs` in `src/data.ts`; the slug must match the filename.
+4. Use level-two headings for major sections so the page outline can be generated.
+5. Include prerequisites, ordered steps, validation, and troubleshooting where supported by the source.
+6. Link to exact source paths and record changes in the coverage record.
+7. Test the guide through navigation, direct URL loading, and search.
+
+Use fenced code blocks with a language. Copy controls are added automatically. Use the `Callout` component for important boundaries or warnings.
+
+## Source standards
+
+Do not invent endpoint URLs, SDK packages, performance statistics, or completed features. Distinguish implemented behavior from a roadmap. Publicly visible source is not necessarily open-source; retain credits and respect each repository's license.
+
+Current central guides were reviewed on October 14, 2026. `SOURCES.md` records the source revision used for each product. Content is a curated snapshot, not an automatic mirror of GitHub.
+
+## Run validation
+
+```bash
+npm ci
+npm test
+npm run build
+```
+
+The tests check metadata-to-content coverage and internal document links. The build type-checks the frontend and compiles every MDX page. Also test search, keyboard navigation, the mobile menu, dark mode, and a fresh load of a deep link.
+
+## Propose a change
+
+Open an issue or pull request in [GothwadTech/docs](https://github.com/GothwadTech/docs). Describe what changed, link the product source, and include only redacted screenshots. Never attach a session token or production environment file.

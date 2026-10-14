@@ -1,0 +1,44 @@
+## Keep public and private configuration separate
+
+A variable prefixed with `VITE_` is available to browser code when used in the bundle. It is not an appropriate place for a service-role key, provider secret, internal token, or signing key.
+
+| Configuration | Location |
+| --- | --- |
+| Public API URL | Public frontend or Worker configuration |
+| Supabase service-role key | Worker / server secret |
+| JWT signing secret | Accounts Worker secret |
+| Resend API key | Mail Worker secret |
+| Local development secret | Ignored `.dev.vars` or server environment |
+| Release signing material | Maintainer-controlled secret store |
+
+## Manage secrets safely
+
+Use Wrangler prompts or the Cloudflare dashboard's Secret type. Avoid putting secret values into command arguments that persist in shell history. Do not include keys in screenshots, tickets, logs, or documentation examples.
+
+If a credential is exposed, revoke or rotate it in the owning provider. Deleting the line from the latest Git revision is not sufficient to invalidate a leaked key.
+
+## Protect authentication flows
+
+- Require PKCE S256 for public OAuth clients.
+- Validate `state` before code exchange.
+- Register exact redirect URIs; avoid broad wildcards.
+- Keep confidential-client exchanges on your backend.
+- Never share the Accounts JWT signing secret with a frontend.
+- Inspect cookie attributes, not cookie values, when debugging SSO.
+
+## Respect product boundaries
+
+Accounts and Mail use separate database projects. Mail verifies identity through Accounts' HTTP interface, not direct database access. Service-role credentials bypass database row-level protections and must remain on the Worker.
+
+Mail's reader treats email HTML as untrusted and renders it in a restrictive sandboxed iframe. Do not remove the sandbox or render an arbitrary email body into the main application DOM.
+
+## Before production
+
+1. Remove development-only auth overrides.
+2. Review allowed origins, cookie domain, HTTPS, and callback URLs.
+3. Verify database policies and least-privilege access.
+4. Run each repository's tests and configuration checks.
+5. Test error paths without exposing private response data.
+6. Review current dependency security and licensing obligations.
+
+These are implementation and operational safeguards, not a certification or an independent security audit.

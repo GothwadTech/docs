@@ -1,0 +1,65 @@
+<Callout title="Reference, not a live API console">These endpoints are documented in the Accounts and Mail repositories. Requests require your own configured deployment and, except where noted, valid authorization. This site never asks for or sends your credentials.</Callout>
+
+## Accounts OAuth endpoints
+
+Use `https://accounts.gothwadtech.com/api` for an Accounts `/api/*` route, or your Accounts Worker Custom Domain without that prefix. See the [OAuth guide](/docs/oauth) for a complete PKCE flow.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/oauth/authorize` | Browser authorization and consent |
+| POST | `/oauth/token` | Code exchange or refresh-token rotation |
+| GET | `/oauth/userinfo` | Profile fields allowed by granted scopes |
+| GET | `/oauth/app-info?client_id=...` | Public app information |
+
+The token endpoint accepts JSON or form-encoded bodies. An authorization-code request includes `grant_type`, `code`, `client_id`, `redirect_uri`, and `code_verifier` for a public client. Do not send requests with placeholder credentials and expect them to authenticate.
+
+```bash
+# Replace the base and token locally. Do not put tokens into issue reports.
+curl "$AUTH_BASE/oauth/userinfo" \
+  -H "Authorization: Bearer $ACCESS_TOKEN"
+```
+
+## Mail endpoints
+
+Mail serves JSON under `/api/*` on its configured origin. All routes except health require a verified session.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/health` | Public liveness and configuration booleans |
+| GET | `/api/session` | Current identity, address, and daily send allowance |
+| GET | `/api/mail/messages` | Paginated message listing |
+| GET | `/api/mail/messages/:id` | Message body and details |
+| PATCH | `/api/mail/messages/:id` | Set read, starred, or trash state |
+| DELETE | `/api/mail/messages/:id` | Permanently delete an item already in Trash |
+| POST | `/api/mail/drafts` | Create or update a draft |
+| DELETE | `/api/mail/drafts/:id` | Delete a draft |
+| POST | `/api/mail/send` | Send a message |
+
+### List messages
+
+Query parameters are `folder`, `limit`, and `before`. Supported folder filters are `inbox`, `starred`, `sent`, `drafts`, and `trash`. The maximum page size is 100. Use the returned `nextBefore` value for the next page.
+
+### Send a message
+
+The JSON body includes `to`, `subject`, and `body`, with optional `cc`, `bcc`, and `draftId`. A successful response uses status 201 and contains `id`, `saved`, and `remainingToday`. If `saved` is false, delivery succeeded but the Sent copy could not be stored; do not blindly retry and send a duplicate.
+
+### Write request protection
+
+Cookie-authenticated POST, PATCH, and DELETE requests must come from an allowed origin and use `Content-Type: application/json`. Disallowed origins return 403; the wrong content type returns 415. Bearer-token requests skip the cookie-origin check.
+
+## Mail error handling
+
+Errors use an `error` code and a `message` field. Do not log whole authenticated response bodies.
+
+| Status | Meaning / next step |
+| --- | --- |
+| 400 | Invalid request or malformed ID |
+| 401 | Session unavailable; inspect the documented sign-in URL behavior |
+| 403 | Origin not allowed for a cookie-authenticated write |
+| 404 | Message unavailable to this user |
+| 415 | Send JSON for a write request |
+| 429 | Daily or provider rate limit |
+| 502 | Outbound provider unreachable |
+| 503 | Missing configuration or Accounts integration failure |
+
+Sources: [Accounts OAuth](https://github.com/GothwadTech/accounts/blob/main/docs/OAUTH.md) and [Mail API](https://github.com/GothwadTech/mail/blob/main/docs/MAIL.md). Not every internal Accounts route is cataloged in this initial central reference.

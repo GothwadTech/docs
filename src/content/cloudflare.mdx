@@ -1,0 +1,64 @@
+## What this guide deploys
+
+This guide is for **GothwadTech/docs**: a static React, Vite, TypeScript, and MDX documentation site. It needs no database, runtime API, or production secrets. Other products have different deployment requirements.
+
+## 1. Validate locally
+
+Use Node.js 22 LTS and the committed lockfile.
+
+```bash
+npm ci
+npm test
+npm run build
+npm run preview
+```
+
+Confirm the home page, product filters, search, and a direct guide URL work in the production preview. The output directory is `dist/`.
+
+## 2. Create a Pages project
+
+In Cloudflare, open **Workers & Pages**, create a **Pages** project, and connect the GitHub repository `GothwadTech/docs`. Choose the branch containing your finished site. If it has not been merged into your production branch yet, deploy that working branch as a preview first.
+
+| Setting | Value |
+| --- | --- |
+| Framework preset | Vite |
+| Build command | `npm run build` |
+| Build output directory | `dist` |
+| Root directory | Repository root |
+| Environment variable | `NODE_VERSION=22` |
+
+Save and deploy. No API keys are required by this site.
+
+## 3. Verify direct navigation
+
+The repository includes `public/_redirects`:
+
+```text
+/* /index.html 200
+```
+
+Vite copies this into `dist/`. Pages can then serve the application for deep links such as `/docs/oauth` and `/products` instead of returning a static-file 404.
+
+Open a guide in a new tab and reload it directly on the deployed Pages URL. Verify that an unknown route displays the site's not-found screen.
+
+## 4. Add a custom domain
+
+In the Pages project's **Custom domains** section, add the domain you own and want to use for documentation. Follow the DNS instructions shown for your zone. Wait for domain verification and HTTPS provisioning, then test the same direct routes on that domain.
+
+Do not add production links in other products until this domain is verified and serving the correct project.
+
+## 5. Review headers and updates
+
+`public/_headers` includes content-type protection, a referrer policy, and long-lived caching for hashed assets. HTML is not given immutable caching, so new deployments can load the latest asset references.
+
+Push reviewed changes to the branch connected to Pages. Check the deployment log and verify the live pages after each content or dependency update.
+
+## Troubleshooting
+
+| Problem | What to check |
+| --- | --- |
+| Build cannot find dependencies | Commit `package-lock.json` and check Node version |
+| No output directory | Use `npm run build` and `dist`, not `web` |
+| Deep links return 404 | Confirm `_redirects` exists in the build output |
+| Old content after deploy | Confirm the deployed branch and clear any custom HTML cache rules |
+| Custom domain fails | Check Pages verification and the domain's DNS records |

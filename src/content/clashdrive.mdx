@@ -1,0 +1,40 @@
+## Overview
+
+Clash Drive maps Telegram supergroup forum topics to folders in a browser-based storage workspace. It uses React, TypeScript, Vite, Bun, and `@mtcute` for MTProto connections.
+
+This product connects to Telegram identities. It should not be confused with a fully deployed Gothwad Accounts Drive service merely because Accounts lists Drive-related OAuth scopes.
+
+## Start locally
+
+Install Bun, then:
+
+```bash
+git clone https://github.com/GothwadTech/Clashdrive.git
+cd Clashdrive
+bun install
+bun dev
+```
+
+The source documents port 5173 by default. Use the URL printed by your development server.
+
+## Storage and streaming model
+
+Root folders map to Telegram forum topics. The browser communicates with Telegram datacenters, and a custom service worker handles media range requests for progressive playback.
+
+The README describes batch operations, previews, multiple Telegram identities, and local session management. Review Telegram's terms and limits before depending on it for storage. Keep independent backups of important files.
+
+## Public sharing
+
+Optional public download sharing uses a Cloudflare Worker and bot integration. This is separate from the local client setup. Review `worker.js` and the repository's current instructions before configuring any bot token or publicly exposing a file.
+
+## Production build
+
+```bash
+bun run build
+```
+
+Verify service-worker behavior on an HTTPS origin and confirm that cache updates work after a new deployment. Test logout and local-session cleanup on shared devices.
+
+## Security considerations
+
+Treat Telegram session data and bot credentials as sensitive. Do not include them in logs, screenshots, or Git. Public sharing intentionally makes content accessible outside the signed-in workspace; test permissions using non-sensitive sample files first.

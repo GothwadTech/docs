@@ -1,0 +1,59 @@
+<Callout title="A source-first starting point">These guides are based on the GothwadTech repositories reviewed on October 14, 2026. A repository's documented features are not a guarantee that its live deployment is configured. Check the linked source before a production rollout.</Callout>
+
+## Choose your starting point
+
+Gothwad is a collection of web and native products, not a single installable SDK. Start with the repository for the product you want to build or extend.
+
+| Your goal | Start here | Repository |
+| --- | --- | --- |
+| Add sign-in to an application | [Accounts OAuth](/docs/oauth) | `accounts` |
+| Run a webmail application | [Mail setup](/docs/mail-setup) | `mail` |
+| Work on the PlusTube website | [Gothwad Tube](/docs/tube) | `tubeweb` |
+| Build a messaging experience | [GrixChat](/docs/grixchat) | `grixchat` |
+| Run video meetings | [Gothwad Meet](/docs/meet) | `meet` |
+| Contribute to this documentation | [Contributing](/docs/contributing) | `docs` |
+
+## Prepare your environment
+
+For this docs project, install **Node.js 22 LTS** and Git. Other repositories have their own runtime requirements: Clash Drive uses Bun, while Android projects use the Gradle wrapper and Android SDK.
+
+```bash
+node --version
+npm --version
+git --version
+```
+
+Use a separate working directory for each repository. Do not copy credentials or environment files from one product into another.
+
+## Run your first project
+
+The documentation website is a straightforward place to start. It has no backend, database, or required secrets.
+
+```bash
+git clone https://github.com/GothwadTech/docs.git
+cd docs
+npm ci
+npm run dev
+```
+
+Open the local URL printed by Vite. Change a guide in `src/content/` to see the page update.
+
+```bash
+npm test
+npm run build
+npm run preview
+```
+
+The build command type-checks TypeScript and compiles MDX into the production `dist/` directory.
+
+## Connect an application
+
+If you are adding Gothwad sign-in, follow the [OAuth guide](/docs/oauth). You need a registered client ID, an exact allowed redirect URI, and an Accounts deployment. A public SPA uses PKCE, **not a client secret in frontend code**.
+
+Mail has an additional dependency: its Worker verifies sessions through Accounts and stores messages in a separate Supabase project. Deploy and verify Accounts before following the [Mail deployment guide](/docs/mail-setup).
+
+## Go to production
+
+Follow the deployment instructions for the specific repository. Do not apply a generic Vite build to Accounts: its frontend is static HTML and the Pages output folder is `web`, not `dist`.
+
+For this site, use [Deploy to Cloudflare Pages](/docs/cloudflare). For any product, verify the build, deep links, environment variables, and authentication before adding your production domain.

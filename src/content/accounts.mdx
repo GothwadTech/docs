@@ -1,0 +1,49 @@
+## Overview
+
+Gothwad Accounts is the central authentication service for the Gothwad ecosystem. The repository documents account creation, sign-in, password reset, JWT sessions, remember-me behavior, device management, and an OAuth 2.0 provider.
+
+The browser UI exposes `/signin`, `/signup`, and `/me`. The Worker renders the OAuth consent screen; it is not a separate frontend route.
+
+## How it works
+
+The frontend is HTML, CSS, and JavaScript in `web/`. It calls a Cloudflare Worker in `cloudflare-worker/`, which connects to Supabase Auth and PostgreSQL. The frontend does not receive the Supabase service-role key.
+
+| Location | Responsibility |
+| --- | --- |
+| `web/js/config.js` | Frontend API configuration |
+| `cloudflare-worker/src/index.ts` | Authentication and OAuth handlers |
+| `cloudflare-worker/wrangler.toml` | Worker deployment and public variables |
+| `sql/` | Numbered database migrations |
+| `tools/dev-server.js` | Local frontend server with API proxy |
+
+## Run locally
+
+Clone the repository and configure the Worker's local secrets using its example file.
+
+```bash
+git clone https://github.com/GothwadTech/accounts.git
+cd accounts/cloudflare-worker
+cp .dev.vars.example .dev.vars
+npm install
+npx wrangler dev
+```
+
+In another terminal, from the repository root:
+
+```bash
+node tools/dev-server.js
+```
+
+Open `http://localhost:3000`. Test `/signup`, `/signin`, and `/me`. Use your own development Supabase project and do not commit `.dev.vars`.
+
+## Integrate sign-in
+
+Use the [OAuth integration guide](/docs/oauth) for external applications. Public clients use an authorization code with PKCE S256. Register the exact callback URL before testing.
+
+The documented OAuth endpoints are `/oauth/authorize`, `/oauth/token`, `/oauth/userinfo`, and `/oauth/app-info`. On the Accounts frontend's `/api/*` route, use the `/api` prefix in your base URL.
+
+## Deploy and verify
+
+Follow [Set up Gothwad Accounts](/docs/accounts-setup) for the database, Worker, and Pages configuration. Unlike the other React applications, the Accounts frontend has **no build step**: publish `web/`.
+
+Verify the health endpoint returns JSON, then sign in and open the account dashboard. An HTML response from an API URL normally means routing is reaching Pages instead of the Worker.

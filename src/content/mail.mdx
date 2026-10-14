@@ -1,0 +1,59 @@
+## Overview
+
+Gothwad Mail is a React and Vite webmail application with a Cloudflare Worker API. Users sign in with Gothwad Accounts; their address is derived as `username@APP_DOMAIN`.
+
+Messages live in a separate Mail Supabase project. Resend handles outbound messages, and Cloudflare Email Routing invokes the Worker's inbound email handler.
+
+## Run locally
+
+```bash
+git clone https://github.com/GothwadTech/mail.git
+cd mail
+npm install
+cp .env.example .env.local
+cp worker/.dev.vars.example worker/.dev.vars
+```
+
+Fill in the example settings locally. `.env.local` contains public frontend configuration, not Worker secrets.
+
+```bash
+# Terminal 1
+npm run worker:dev
+```
+
+```bash
+# Terminal 2
+npm run dev
+```
+
+The frontend runs on port 3000 and proxies `/api` to the local Worker. Without a valid Accounts session, it sends the user to Accounts. The source supports `DEV_AUTH_USERNAME` for local development only; never configure it in production.
+
+## Mailbox behavior
+
+The UI exposes Inbox, Starred, Sent, Drafts, and Trash. Starred is a filter on `is_starred`, not a database folder. Every message query is scoped to the verified username.
+
+Drafts autosave after a short typing pause. Sent messages are copied into the sender's mailbox. Permanent deletion is allowed only for messages already in Trash.
+
+## Limits and attachments
+
+| Limit | Documented default |
+| --- | --- |
+| Sends per user per UTC day | 30, configured by `DAILY_SEND_LIMIT` |
+| Inbound message size | 10 MB, configured by `MAX_INBOUND_BYTES` |
+| Recipients per message | 25 |
+| API list page size | Maximum 100 |
+| Attachments | Metadata only; file bytes are not stored |
+
+<Callout title="Do not promise attachment downloads">The documented inbound implementation retains attachment names, types, and sizes only. Full attachment storage is not part of this documented flow.</Callout>
+
+## Test before deployment
+
+```bash
+npm run lint
+npm run test:worker
+npm run test:auth
+npm run test:config
+npm run build
+```
+
+The optional `test:ui` smoke test requires the Worker to be running. Follow [Deploy Gothwad Mail](/docs/mail-setup) for production configuration and [API reference](/docs/api) for REST endpoints.

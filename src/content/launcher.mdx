@@ -1,0 +1,33 @@
+## Overview
+
+Gothwad Launcher is a Kotlin Android TV home screen. The source uses native Android Views, ViewBinding, and RecyclerView, with D-pad navigation, wallpaper customization, voice search, and a quick dashboard.
+
+## Prepare Android tooling
+
+The README specifies Android Studio Ladybug 2024.2 or later, JDK 17, and Android SDK Platform 34. Confirm current versions in the Gradle files before installing dependencies.
+
+```bash
+git clone https://github.com/GothwadTech/launcher.git
+cd launcher
+./gradlew assembleDebug
+```
+
+On Windows, use `gradlew.bat` instead. The documented debug output is `app/build/outputs/apk/debug/app-debug.apk`.
+
+## Test on a TV device
+
+Install a debug build on your own emulator or test device. Test D-pad navigation, focus visibility, app launch, the home button, voice input, and wallpaper readability. Keep another launcher installed while evaluating home-screen behavior.
+
+## Release builds
+
+```bash
+./gradlew assembleRelease bundleRelease
+```
+
+Release signing requires the appropriate maintainer-managed secrets. Never commit a keystore or signing password. A debug build has a different signing identity and is not interchangeable with a signed release update.
+
+The README describes CI for builds, tests, and lint; a tag-triggered release workflow publishes signed APK and AAB artifacts. Read [docs/CI_RELEASE.md](https://github.com/GothwadTech/launcher/blob/main/docs/CI_RELEASE.md) before releasing.
+
+## Architecture and license
+
+The README identifies Apache-2.0 licensing. Check the repository license at your selected revision. Read [docs/ARCHITECTURE.md](https://github.com/GothwadTech/launcher/blob/main/docs/ARCHITECTURE.md) for the process model and startup paths.

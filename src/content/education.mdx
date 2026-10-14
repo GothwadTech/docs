@@ -1,0 +1,40 @@
+## Overview
+
+Gothwad Education is a K–12 school-management and learning platform. The repository describes role-specific experiences for administrators, teachers, students, and parents.
+
+| Role | Documented workflows |
+| --- | --- |
+| Administrator | Student and staff registry, fees, notices, overview analytics |
+| Teacher | Attendance, assignments, submission review, report cards |
+| Student | Timetable, homework, grades, notices |
+| Parent | Child progress, fee information, teacher notes |
+
+## Run locally
+
+```bash
+git clone https://github.com/GothwadTech/education.git
+cd education
+npm install
+cp .env.example .env
+npm run dev
+```
+
+Review the environment example before adding optional credentials. The source describes local persistence and optional Supabase synchronization; demo personas are not production authentication.
+
+## Repository map
+
+Role-specific views live in `src/features/`, authentication and theme state in `src/context/`, and data stores in `src/lib/`. The SQL schema is in `sql/schema.sql`.
+
+Read `docs/README.md` before configuring a real database. Use anonymized sample data for development, especially for student records, attendance, and payment information.
+
+## Build and validate
+
+```bash
+npm run build
+```
+
+Before a live school deployment, independently validate role authorization, database policies, data retention, and backup requirements. A payment-related interface is not proof of a configured payment processor.
+
+## Documentation boundary
+
+This overview is based on the README. Production security, deployment, and payment integration require further verification against the current implementation and operational requirements.

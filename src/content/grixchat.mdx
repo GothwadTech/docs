@@ -1,0 +1,48 @@
+## Overview
+
+GrixChat is a messaging and private-calling application with Chats, Stories, Search, Calls, and Profile sections. The documented architecture combines Supabase persistence and realtime events with WebRTC calling. Firebase Cloud Messaging is used for background notifications.
+
+## Start in mock mode
+
+Mock mode is the documented way to explore the app without production credentials.
+
+```bash
+git clone https://github.com/GothwadTech/grixchat.git
+cd grixchat
+npm install
+npm run dev:mock
+```
+
+The upstream README lists `demo@grixchat.app` and `grixchat` as **local mock credentials only**. The mock uses an in-memory seeded graph; do not treat it as durable or production storage.
+
+## Configure real Supabase
+
+Copy `.env.example` to `.env` and set the documented public Supabase URL and anon key. Read `docs/DEV_SETUP.md` and `sql/00_master_instructions.md` before applying SQL.
+
+```bash
+cp .env.example .env
+npm run dev
+```
+
+The source identifies `sql/01_schema.sql` and `sql/02_functions_realtime_storage.sql` as the current schema files. Do not run files from `sql/legacy`.
+
+## Understand the server boundary
+
+`server/api.ts` uses Web Request and Response APIs. Cloudflare Pages Functions in `functions/` forward `/api/*` and `/auth/*` requests to it. The same API implementation is used by the local development server.
+
+Realtime subscriptions should be filtered to the relevant records; high-frequency transient events use Broadcast and Presence. Do not add global table listeners without reviewing the data and egress impact.
+
+## Test and deploy
+
+```bash
+npm test
+npm run lint
+npm run build
+npx wrangler pages functions build
+```
+
+Deploy to Pages with `npm run build`, output `dist`, and the environment variables documented in `.env.example`. Unlike a purely static site, the `functions/` directory is part of this deployment. Verify sign-in, API routing, calls, and message delivery in a test environment before production.
+
+## Further reading
+
+Start with [docs/CONTEXT.md](https://github.com/GothwadTech/grixchat/blob/main/docs/CONTEXT.md), then the repository's setup and testing guides. This portal does not claim unverified user-capacity or free-tier guarantees.
